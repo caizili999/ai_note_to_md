@@ -13,12 +13,13 @@ from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QPushButton, QLabel, QTextEdit, QComboBox, 
     QFileDialog, QMessageBox, QTabWidget, QGroupBox, 
-    QFormLayout, QLineEdit, QCheckBox, QSpinBox
+    QFormLayout, QLineEdit, QCheckBox, QSpinBox, QDialog
 )
 from PySide6.QtCore import Qt, QSize
 
 from utils.file_handler import FileHandler
 from models.ai_processor import get_processor
+from utils.ocr_processor import OCRProcessor
 
 
 class MainWindow(QMainWindow):
@@ -212,12 +213,56 @@ class MainWindow(QMainWindow):
         
         layout.addWidget(api_group)
         
+        # OCR设置
+        ocr_group = QGroupBox("OCR设置")
+        ocr_layout = QFormLayout(ocr_group)
+        
+        # OCR API类型选择
+        self.ocr_api_type = QComboBox()
+        self.ocr_api_type.addItems(["自定义", "百度", "腾讯"])
+        self.ocr_api_type.currentIndexChanged.connect(self.on_ocr_api_type_changed)
+        ocr_layout.addRow("OCR API类型:", self.ocr_api_type)
+        
+        # 百度OCR设置
+        self.baidu_ocr_token = QLineEdit()
+        self.baidu_ocr_token.setPlaceholderText("输入百度OCR Token")
+        self.baidu_ocr_token.setEchoMode(QLineEdit.Password)
+        ocr_layout.addRow("百度OCR Token:", self.baidu_ocr_token)
+        
+        # 腾讯OCR设置
+        self.tencent_secret_id = QLineEdit()
+        self.tencent_secret_id.setPlaceholderText("输入腾讯云SecretId")
+        self.tencent_secret_id.setEchoMode(QLineEdit.Password)
+        ocr_layout.addRow("腾讯云SecretId:", self.tencent_secret_id)
+        
+        self.tencent_secret_key = QLineEdit()
+        self.tencent_secret_key.setPlaceholderText("输入腾讯云SecretKey")
+        self.tencent_secret_key.setEchoMode(QLineEdit.Password)
+        ocr_layout.addRow("腾讯云SecretKey:", self.tencent_secret_key)
+        
+        # 自定义OCR设置
+        self.custom_ocr_endpoint = QLineEdit()
+        self.custom_ocr_endpoint.setPlaceholderText("输入自定义OCR API地址")
+        ocr_layout.addRow("自定义OCR地址:", self.custom_ocr_endpoint)
+        
+        self.custom_ocr_token = QLineEdit()
+        self.custom_ocr_token.setPlaceholderText("输入自定义OCR Token")
+        self.custom_ocr_token.setEchoMode(QLineEdit.Password)
+        ocr_layout.addRow("自定义OCR Token:", self.custom_ocr_token)
+        
+        layout.addWidget(ocr_group)
+        
         # 操作按钮布局
         button_layout = QHBoxLayout()
         # 测试按钮
         test_conn_button = QPushButton("测试连接")
         test_conn_button.clicked.connect(self.test_connection)
         button_layout.addWidget(test_conn_button)
+        
+        # 测试OCR按钮
+        test_ocr_button = QPushButton("测试OCR")
+        test_ocr_button.clicked.connect(self.test_ocr_connection)
+        button_layout.addWidget(test_ocr_button)
         
         # 保存设置按钮
         save_settings_button = QPushButton("保存设置")
@@ -228,6 +273,12 @@ class MainWindow(QMainWindow):
         
         # 添加一些空白
         layout.addStretch()
+        
+        # 初始化显示/隐藏相关控件
+        self.on_ocr_api_type_changed(0)
+        
+        # 加载已保存的设置
+        self.load_settings()
     
     def browse_file(self):
         """浏览文件"""
@@ -467,4 +518,258 @@ class MainWindow(QMainWindow):
             os.environ["CUSTOM_MODEL_NAME"] = self.custom_model_name.text()
             os.environ["CUSTOM_BASE_URL"] = self.custom_base_url.text()
         
+        # 保存OCR设置
+        # 保存OCR API类型
+        ocr_api_type_map = ["CUSTOM", "BAIDU", "TENCENT"]
+        os.environ["OCR_API_TYPE"] = ocr_api_type_map[self.ocr_api_type.currentIndex()]
+        
+        # 保存百度OCR设置
+        if self.baidu_ocr_token.text():
+            os.environ["BAIDU_OCR_TOKEN"] = self.baidu_ocr_token.text()
+            
+        # 保存腾讯OCR设置
+        if self.tencent_secret_id.text() and self.tencent_secret_key.text():
+            os.environ["TENCENT_SECRET_ID"] = self.tencent_secret_id.text()
+            os.environ["TENCENT_SECRET_KEY"] = self.tencent_secret_key.text()
+            
+        # 保存自定义OCR设置
+        if self.custom_ocr_endpoint.text():
+            os.environ["CUSTOM_OCR_ENDPOINT"] = self.custom_ocr_endpoint.text()
+        if self.custom_ocr_token.text():
+            os.environ["CUSTOM_OCR_TOKEN"] = self.custom_ocr_token.text()
+        
+        # 将设置保存到配置文件
+        self._save_settings_to_file()
+        
         QMessageBox.information(self, "设置保存", "设置已成功保存")
+
+    def on_ocr_api_type_changed(self, index):
+        """处理OCR API类型变化"""
+        # 根据选择的OCR API类型，显示或隐藏相应的设置控件
+        if index == 0:  # 自定义
+            self.baidu_ocr_token.setVisible(False)
+            self.tencent_secret_id.setVisible(False)
+            self.tencent_secret_key.setVisible(False)
+            self.custom_ocr_endpoint.setVisible(True)
+            self.custom_ocr_token.setVisible(True)
+        elif index == 1:  # 百度
+            self.baidu_ocr_token.setVisible(True)
+            self.tencent_secret_id.setVisible(False)
+            self.tencent_secret_key.setVisible(False)
+            self.custom_ocr_endpoint.setVisible(False)
+            self.custom_ocr_token.setVisible(False)
+        elif index == 2:  # 腾讯
+            self.baidu_ocr_token.setVisible(False)
+            self.tencent_secret_id.setVisible(True)
+            self.tencent_secret_key.setVisible(True)
+            self.custom_ocr_endpoint.setVisible(False)
+            self.custom_ocr_token.setVisible(False)
+
+    def test_ocr_connection(self):
+        """测试OCR连接"""
+        try:
+            from pathlib import Path
+            from utils.ocr_processor import OCRProcessor
+            
+            # 获取OCR类型和配置
+            ocr_api_type_map = ["CUSTOM", "BAIDU", "TENCENT"]
+            ocr_api_type = ocr_api_type_map[self.ocr_api_type.currentIndex()]
+            
+            # 构建配置字典
+            config = {
+                "OCR_API_TYPE": ocr_api_type
+            }
+            
+            # 根据OCR类型添加不同的配置项
+            if ocr_api_type == "BAIDU":
+                if not self.baidu_ocr_token.text():
+                    QMessageBox.warning(self, "测试失败", "请输入百度OCR Token")
+                    return
+                config["BAIDU_OCR_TOKEN"] = self.baidu_ocr_token.text()
+            
+            elif ocr_api_type == "TENCENT":
+                if not self.tencent_secret_id.text() or not self.tencent_secret_key.text():
+                    QMessageBox.warning(self, "测试失败", "请输入腾讯云SecretId和SecretKey")
+                    return
+                config["TENCENT_SECRET_ID"] = self.tencent_secret_id.text()
+                config["TENCENT_SECRET_KEY"] = self.tencent_secret_key.text()
+            
+            else:  # CUSTOM
+                if not self.custom_ocr_endpoint.text() or not self.custom_ocr_token.text():
+                    QMessageBox.warning(self, "测试失败", "请输入自定义OCR API地址和Token")
+                    return
+                config["CUSTOM_OCR_ENDPOINT"] = self.custom_ocr_endpoint.text()
+                config["CUSTOM_OCR_TOKEN"] = self.custom_ocr_token.text()
+            
+            # 创建OCR处理器
+            ocr_processor = OCRProcessor(config)
+            
+            # 弹出文件选择对话框，让用户选择一个图片进行测试
+            file_dialog = QFileDialog()
+            file_path, _ = file_dialog.getOpenFileName(
+                self,
+                "选择测试图片",
+                "",
+                "图片文件 (*.png *.jpg *.jpeg *.bmp)"
+            )
+            
+            if not file_path:
+                return
+            
+            # 显示等待提示
+            QMessageBox.information(self, "测试中", "正在测试OCR功能，请稍候...")
+            
+            # 进行OCR处理
+            result = ocr_processor.process_image(Path(file_path))
+            
+            if result:
+                # 显示结果对话框
+                result_dialog = QDialog(self)
+                result_dialog.setWindowTitle("OCR测试结果")
+                result_dialog.setMinimumSize(500, 400)
+                
+                layout = QVBoxLayout(result_dialog)
+                
+                result_text = QTextEdit()
+                result_text.setReadOnly(True)
+                result_text.setText(result)
+                layout.addWidget(result_text)
+                
+                close_button = QPushButton("关闭")
+                close_button.clicked.connect(result_dialog.accept)
+                layout.addWidget(close_button)
+                
+                result_dialog.exec()
+            else:
+                QMessageBox.warning(self, "测试失败", "OCR处理失败，未返回结果")
+                
+        except Exception as e:
+            QMessageBox.critical(self, "测试错误", f"OCR测试时发生错误: {str(e)}")
+
+    def load_settings(self):
+        """加载已保存的设置"""
+        # 加载自定义模型设置
+        self.custom_model_name.setText(os.environ.get("CUSTOM_MODEL_NAME", ""))
+        self.custom_base_url.setText(os.environ.get("CUSTOM_BASE_URL", ""))
+        self.custom_api_key.setText(os.environ.get("CUSTOM_API_KEY", ""))
+        
+        # 加载OCR API类型
+        ocr_api_type = os.environ.get("OCR_API_TYPE", "CUSTOM")
+        if ocr_api_type == "BAIDU":
+            self.ocr_api_type.setCurrentIndex(1)
+        elif ocr_api_type == "TENCENT":
+            self.ocr_api_type.setCurrentIndex(2)
+        else:
+            self.ocr_api_type.setCurrentIndex(0)
+        
+        # 加载百度OCR设置
+        self.baidu_ocr_token.setText(os.environ.get("BAIDU_OCR_TOKEN", ""))
+        
+        # 加载腾讯OCR设置
+        self.tencent_secret_id.setText(os.environ.get("TENCENT_SECRET_ID", ""))
+        self.tencent_secret_key.setText(os.environ.get("TENCENT_SECRET_KEY", ""))
+        
+        # 加载自定义OCR设置
+        self.custom_ocr_endpoint.setText(os.environ.get("CUSTOM_OCR_ENDPOINT", ""))
+        self.custom_ocr_token.setText(os.environ.get("CUSTOM_OCR_TOKEN", ""))
+        
+        # 尝试从配置文件加载设置
+        self._load_settings_from_file()
+    
+    def _save_settings_to_file(self):
+        """将设置保存到配置文件"""
+        try:
+            import json
+            from pathlib import Path
+            
+            # 创建设置目录
+            config_dir = Path.home() / ".ai_note_to_md"
+            config_dir.mkdir(exist_ok=True)
+            
+            # 保存设置到文件
+            config_file = config_dir / "settings.json"
+            
+            # 收集设置
+            settings = {
+                # 模型设置
+                "CUSTOM_MODEL_NAME": self.custom_model_name.text(),
+                "CUSTOM_BASE_URL": self.custom_base_url.text(),
+                
+                # OCR设置
+                "OCR_API_TYPE": ["CUSTOM", "BAIDU", "TENCENT"][self.ocr_api_type.currentIndex()],
+                "BAIDU_OCR_TOKEN": self.baidu_ocr_token.text(),
+                "TENCENT_SECRET_ID": self.tencent_secret_id.text(),
+                "TENCENT_SECRET_KEY": self.tencent_secret_key.text(),
+                "CUSTOM_OCR_ENDPOINT": self.custom_ocr_endpoint.text(),
+                "CUSTOM_OCR_TOKEN": self.custom_ocr_token.text()
+            }
+            
+            # 写入文件
+            with open(config_file, 'w', encoding='utf-8') as f:
+                json.dump(settings, f, ensure_ascii=False, indent=2)
+                
+        except Exception as e:
+            print(f"保存设置到文件时出错: {e}")
+    
+    def _load_settings_from_file(self):
+        """从配置文件加载设置"""
+        try:
+            import json
+            from pathlib import Path
+            
+            # 设置文件路径
+            config_file = Path.home() / ".ai_note_to_md" / "settings.json"
+            
+            # 检查文件是否存在
+            if not config_file.exists():
+                return
+            
+            # 读取设置
+            with open(config_file, 'r', encoding='utf-8') as f:
+                settings = json.load(f)
+            
+            # 应用模型设置
+            if "CUSTOM_MODEL_NAME" in settings:
+                self.custom_model_name.setText(settings["CUSTOM_MODEL_NAME"])
+                os.environ["CUSTOM_MODEL_NAME"] = settings["CUSTOM_MODEL_NAME"]
+            
+            if "CUSTOM_BASE_URL" in settings:
+                self.custom_base_url.setText(settings["CUSTOM_BASE_URL"])
+                os.environ["CUSTOM_BASE_URL"] = settings["CUSTOM_BASE_URL"]
+            
+            # 应用OCR设置
+            if "OCR_API_TYPE" in settings:
+                ocr_type = settings["OCR_API_TYPE"]
+                if ocr_type == "BAIDU":
+                    self.ocr_api_type.setCurrentIndex(1)
+                elif ocr_type == "TENCENT":
+                    self.ocr_api_type.setCurrentIndex(2)
+                else:
+                    self.ocr_api_type.setCurrentIndex(0)
+                os.environ["OCR_API_TYPE"] = ocr_type
+            
+            # 百度OCR设置
+            if "BAIDU_OCR_TOKEN" in settings:
+                self.baidu_ocr_token.setText(settings["BAIDU_OCR_TOKEN"])
+                os.environ["BAIDU_OCR_TOKEN"] = settings["BAIDU_OCR_TOKEN"]
+            
+            # 腾讯OCR设置
+            if "TENCENT_SECRET_ID" in settings:
+                self.tencent_secret_id.setText(settings["TENCENT_SECRET_ID"])
+                os.environ["TENCENT_SECRET_ID"] = settings["TENCENT_SECRET_ID"]
+            
+            if "TENCENT_SECRET_KEY" in settings:
+                self.tencent_secret_key.setText(settings["TENCENT_SECRET_KEY"])
+                os.environ["TENCENT_SECRET_KEY"] = settings["TENCENT_SECRET_KEY"]
+            
+            # 自定义OCR设置
+            if "CUSTOM_OCR_ENDPOINT" in settings:
+                self.custom_ocr_endpoint.setText(settings["CUSTOM_OCR_ENDPOINT"])
+                os.environ["CUSTOM_OCR_ENDPOINT"] = settings["CUSTOM_OCR_ENDPOINT"]
+            
+            if "CUSTOM_OCR_TOKEN" in settings:
+                self.custom_ocr_token.setText(settings["CUSTOM_OCR_TOKEN"])
+                os.environ["CUSTOM_OCR_TOKEN"] = settings["CUSTOM_OCR_TOKEN"]
+                
+        except Exception as e:
+            print(f"从文件加载设置时出错: {e}")
