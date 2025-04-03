@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+'''
+@File    :   __init__.py
+@Time    :   2025/04/03
+@Author  :   Maker 
+@Version :   1.0
+'''
 
 """
-用户界面模块
+UI模块
 """ 

@@ -1,0 +1,31 @@
+{
+    "CUSTOM_MODEL": "gemini-1.5-pro",
+    "CUSTOM_BASE_URL": "https://********/v1/",
+    "CUSTOM_API_KEY": "sk-**************************************a89",
+    "MODELS": {
+        "default_model": {
+            "id": "default_model",
+            "name": "deepseek-reasoner",
+            "display_name": "deepseek",
+            "base_url": "https://api.deepseek.com/v1/",
+            "api_key": "sk-******************************ec"
+        },
+        "model_1743689861": {
+            "id": "model_1743689861",
+            "name": "gemini-1.5-pro",
+            "display_name": "谷歌",
+            "base_url": "https://********/v1/",
+            "api_key": "sk-**************************************a89"
+        }
+    },
+    "PROMPT_TEMPLATE": "请将以下笔记内容转换为Markdown格式:\n\n",
+    "OCR_API_TYPE": "CUSTOM",
+    "BAIDU_APP_ID": "25*****94",
+    "BAIDU_API_KEY": "p***********g",
+    "BAIDU_SECRET_KEY": "e***********GW",
+    "TENCENT_SECRET_ID": "AK***********L0Sf",
+    "TENCENT_SECRET_KEY": "4u***********1Y",
+    "TENCENT_REGION": "ap-beijing",
+    "CUSTOM_OCR_ENDPOINT": "http://127.0.0.1:1224",
+    "CUSTOM_OCR_KEY": ""
+}

@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+'''
+@File    :   main.py
+@Time    :   2025/04/03
+@Author  :   Maker 
+@Version :   1.0
+'''
 
 """
 AI笔记整理工具 - 主程序
@@ -17,8 +23,12 @@ from ui.main_window import MainWindow
 def load_config():
     """加载配置文件"""
     try:
+        # 获取项目根目录
+        current_dir = Path(__file__).resolve().parent
+        project_root = current_dir.parent
+        
         # 设置文件路径
-        config_file = Path.home() / ".ai_note_to_md" / "settings.json"
+        config_file = project_root / "settings.json"
         
         # 检查文件是否存在
         if not config_file.exists():
