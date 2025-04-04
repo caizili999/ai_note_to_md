@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         
         self.setWindowTitle("AI笔记整理工具")
-        self.setMinimumSize(QSize(900, 600))
+        self.setMinimumSize(QSize(1000, 800))
         
         # 初始化状态栏
         self.status_bar = self.statusBar()
@@ -113,6 +113,7 @@ class MainWindow(QMainWindow):
         input_layout = QHBoxLayout()
         self.input_text = QTextEdit()
         self.input_text.setPlaceholderText("在此粘贴笔记内容...")
+        self.input_text.setMinimumHeight(200)  # 设置最小高度
         input_layout.addWidget(self.input_text)
         file_layout.addLayout(input_layout)
         
@@ -163,6 +164,7 @@ class MainWindow(QMainWindow):
         
         self.output_text = QTextEdit()
         self.output_text.setReadOnly(True)
+        self.output_text.setMinimumHeight(250)  # 设置最小高度
         result_layout.addWidget(self.output_text)
         
         # 导出按钮
@@ -198,6 +200,7 @@ class MainWindow(QMainWindow):
         
         self.files_list = QTextEdit()
         self.files_list.setReadOnly(True)
+        self.files_list.setMinimumHeight(150)  # 设置最小高度
         files_layout.addWidget(self.files_list)
         
         layout.addWidget(files_group)
@@ -213,6 +216,7 @@ class MainWindow(QMainWindow):
         
         self.status_text = QTextEdit()
         self.status_text.setReadOnly(True)
+        self.status_text.setMinimumHeight(200)  # 设置最小高度
         status_layout.addWidget(self.status_text)
         
         layout.addWidget(status_group)
@@ -233,6 +237,7 @@ class MainWindow(QMainWindow):
         self.models_list = QListWidget()
         self.models_list.setSelectionMode(QListWidget.SingleSelection)
         self.models_list.itemSelectionChanged.connect(self.on_model_selected)
+        self.models_list.setMinimumHeight(150)  # 设置最小高度
         models_layout.addWidget(self.models_list)
         
         # 模型操作按钮
