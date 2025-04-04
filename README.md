@@ -54,9 +54,8 @@ python src/main.py
 python3 src/main.py
 ```
 
-或直接运行项目根目录下的启动脚本:
+或直接从releases下载zip版本的解压点击运行，Windows推荐使用这个无需安装环境:
 - Windows: 双击`点击运行.bat`
-- Linux/Mac: 执行`./run.sh`
 
 ### 基础使用流程
 1. 在"设置"标签页配置AI模型和OCR服务
