@@ -5,6 +5,5 @@ pyside6>=6.4.0
 markdown>=3.4.1
 Pillow>=10.0.0
 baidu-aip>=4.16.10
-tencentcloud-sdk-python>=3.0.941
 requests>=2.31.0
 python-dotenv>=1.0.0 
