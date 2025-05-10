@@ -8,7 +8,7 @@
             "name": "deepseek-reasoner",
             "display_name": "deepseek",
             "base_url": "https://api.deepseek.com/v1/",
-            "api_key": "sk-******************************ec"
+            "api_key": "sk-******************************en"
         },
         "model_1743689861": {
             "id": "model_1743689861",
